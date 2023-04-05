@@ -38,6 +38,27 @@ extension KFOptionSetter {
         
         return self
     }
+    
+    /// Sets a block to get image size
+    ///
+    /// - Parameter block: The block which is used to read the image object.
+    /// - Returns: `Self` value after read size
+    public func imageFill(for size: CGSize, max: CGFloat, fill: CGFloat, block: @escaping (ImageFill) throws -> Void) -> Self {
+        let modifier = AnyImageModifier { image -> KFCrossPlatformImage in
+            let img_size = image.size
+            let geo_size = size
+            let fill = ImageFill.calculate_image_fill(geo_size: geo_size,
+                                                      img_size: img_size,
+                                                      maxHeight: max,
+                                                      fillHeight: fill)
+            DispatchQueue.main.async { [block, fill] in
+                try? block(fill)
+            }
+            return image
+        }
+        options.imageModifier = modifier
+        return self
+    }
 }
 
 let MAX_FILE_SIZE = 20_971_520 // 20MiB
